@@ -75,6 +75,12 @@ ifneq (,$(findstring $(DEB_HOST_ARCH), amd64))
   ia32_packaging_files = ia32-packaging-files
 endif
 
+ifeq ($(distrelease),trusty)
+	dist_subst_vars = -Vdist:Depends="libasound2:i386, libodbc1:i386, libx11-6:i386, libxext6:i386, libxi6:i386, libxt6:i386, libxtst6:i386"
+else
+	dist_subst_vars = -Vdist:Depends="lib32asound2 [amd64], ia32-libs [amd64]"
+endif
+
 info:
 	@echo Build information
 	@echo ==========================
@@ -200,7 +206,7 @@ debian/control: debian/control.in debian/rules
 	      -e 's/@jdkversion@/$(jdkversion)/g' \
 	      -e 's/@releng_ver@/$(releng_ver)/g' \
 	    debian/control.in > debian/control
-	@if cmp -s debian/control debian/control.old; then \
+	@if cmp -s dean/control debian/control.old; then \
 	  rm -f debian/control.old; \
 	else \
 	  echo "debian/control did change, please restart the build"; \
@@ -795,3 +801,9 @@ binary-arch:	$(binary_arch_targets)
 binary: binary-arch binary-indep
 
 .PHONY: binary binary-indep binary-arch build build-indep build-arch clean
+
+%:
+	dh $@
+override_dh_gencontrol:
+	dh_gencontrol -- $(dist_subst_vars)
+
